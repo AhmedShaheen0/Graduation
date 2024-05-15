@@ -12,7 +12,7 @@ using Graduation.Services.Activity;
 
 namespace Graduation.Controllers
 {
-    [Authorize(Roles = AppRoles.Admin + ", " + AppRoles.User)]
+    [Authorize(Roles = AppRoles.Admin  + AppRoles.User)]
     [ApiController]
     [Route("[controller]")]
     public class ActivityController : ControllerBase
