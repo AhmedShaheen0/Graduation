@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace Graduation.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class AuthController : ControllerBase
     {
@@ -19,7 +19,7 @@ namespace Graduation.Controllers
         }
 
         [HttpGet]
-        [Route("api/users")] // Define route for getting all users
+        [Route("users")] // Define route for getting all users
         public async Task<IActionResult> GetAllUsers()
         {
             var users = await _authService.GetAllUser();
@@ -29,7 +29,7 @@ namespace Graduation.Controllers
         }
 
         [HttpGet]
-        [Route("api/users/{username}")] 
+        [Route("users/{username}")] 
         public async Task<IActionResult> GetUserByUsername(string username)
         {
             var user = await _authService.GetUserByUsername(username);
@@ -43,7 +43,7 @@ namespace Graduation.Controllers
         }
     
     [HttpPost("register")]
-        public async Task<IActionResult> RegisterAsync([FromBody] RegisterModel model)
+        public async Task<IActionResult> RegisterAsync([FromForm]RegisterModel model)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -57,7 +57,7 @@ namespace Graduation.Controllers
         }
 
         [HttpPost("token")]
-        public async Task<IActionResult> GetTokenAsync([FromBody] TokenRequestModel model)
+        public async Task<IActionResult> GetTokenAsync([FromForm] TokenRequestModel model)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -71,7 +71,7 @@ namespace Graduation.Controllers
         }
 
         [HttpPost("addrole")]
-        public async Task<IActionResult> AddRoleAsync([FromBody] AddRoleModel model)
+        public async Task<IActionResult> AddRoleAsync([FromForm] AddRoleModel model)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);

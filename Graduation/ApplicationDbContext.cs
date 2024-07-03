@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
-using Graduation.Models.Activity;
+﻿using Graduation.Models.Activity;
 using Graduation.Models.Auth;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace Graduation
 {
@@ -10,20 +10,12 @@ namespace Graduation
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
         }
-        protected override void OnModelCreating(ModelBuilder builder)
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            builder.Entity<ActivityModel>()
-            .HasOne(a => a.User)
-            .WithMany(u => u.Activities)
-            .HasForeignKey(a => a.Userid);
-
-
-
-
-            base.OnModelCreating(builder);
+            base.OnModelCreating(modelBuilder);
         }
+
         public DbSet<ActivityModel> Activities { get; set; }
         public DbSet<PlaceModel> Places { get; set; }
-
     }
 }

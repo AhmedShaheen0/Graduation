@@ -5,6 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Graduation.Models.Activity;
 using Graduation.Services.Auth;
+using Microsoft.AspNetCore.Identity;
+using System.Diagnostics;
+using Graduation.Models.Auth;
 
 namespace Graduation.Services.Activity
 {
@@ -20,16 +23,27 @@ namespace Graduation.Services.Activity
 
 
 
-        public ActivityModel CreateEvent(ActivityModel ev, string userid)
+        public ActivityModel CreateEvent(ActivityViewModel ev, ApplicationUser user)
         {
-            var model = new ActivityModel
+            var place = new PlaceModel
             {
-                Userid = userid,
-                Date = DateTime.UtcNow,
-                Name = ev.Name,
-                Place = ev.Place,
-                User = ev.User,
+                Latitude = ev.Place.Latitude,
+                Longitude = ev.Place.Longitude,
+                Name = ev.Place.placeName
+                ,IsActive =true
+            };
 
+                    var model = new ActivityModel
+            {
+
+                username = user.UserName,
+                Date = DateTime.UtcNow.Date,
+                Time = TimeOnly.FromDateTime(DateTime.Now).ToString("HH:mm"),
+                        Duration = ev.Duration,
+                        Name = ev.Name,
+                Place = place,
+                User = user,
+                IsActive = true
             };
             _context.Activities.Add(model);
             _context.SaveChanges();
@@ -42,6 +56,7 @@ namespace Graduation.Services.Activity
             var activity = _context.Activities
                .Include(x => x.Place)
                .Include(x => x.User)
+               .Where(x => x.IsActive == true || x.Place.IsActive == true)
              .FirstOrDefault(e => e.ID == id);
 
             if (activity is null)
@@ -53,15 +68,18 @@ namespace Graduation.Services.Activity
             // Create and return the ActivityViewModel instance
             var activityVM = new ActivityViewModel
             {
+                ID = activity.ID,
                 Username = activity.User.UserName,
                 Name = activity.Name,
                 Date = activity.Date,
+                Time = activity.Time,
+                Duration = activity.Duration,
                 Place = new PlaceViewModel
                 {
                     Id = activity.Place.Id,
                     Latitude = activity.Place.Latitude,
                     Longitude = activity.Place.Longitude,
-                    Name = activity.Place.Name
+                    placeName = activity.Place.Name
                 }
             };
             return activityVM;
@@ -73,62 +91,96 @@ namespace Graduation.Services.Activity
         public List<ActivityViewModel> GetEvents()
         {
             var activities = _context.Activities
-              .Select(activity => new ActivityViewModel
-              {
-                  Username = activity.User.UserName,
-                  Name = activity.Name,
-                  Date = activity.Date,
-                  Place = new PlaceViewModel
-                  {
-                      Id = activity.Place.Id,
-                      Latitude = activity.Place.Latitude,
-                      Longitude = activity.Place.Longitude,
-                      Name = activity.Place.Name
-                  }
-              })
-              .ToList();
+                .Where(activity => activity.IsActive && activity.Place.IsActive) // Filter on server side
+                .Select(activity => new ActivityViewModel
+                {
+                    ID = activity.ID,
+                    Username = activity.User.UserName,
+                    Name = activity.Name,
+                    Date = activity.Date,
+                Time = activity.Time,
+                    Duration = activity.Duration,
+                    Place = new PlaceViewModel
+                    {
+                        Id = activity.Place.Id,
+                        Latitude = activity.Place.Latitude,
+                        Longitude = activity.Place.Longitude,
+                        placeName = activity.Place.Name,
+                        IsActive = activity.Place.IsActive // Include IsActive property
+                    }
+                })
+                .ToList();
 
             return activities;
         }
 
+
+
+
         public List<ActivityViewModel> GetUserActivities(string username)
         {
+            // Fetch the activities that match the filtering criteria
             var activities = _context.Activities
-              .Where(activity => activity.User.UserName == username)
-              .Select(activity => new ActivityViewModel
-              {
-                  Username = activity.User.UserName,
-                  Name = activity.Name,
-                  Date = activity.Date,
-                  Place = new PlaceViewModel
-                  {
-                      Id = activity.Place.Id,
-                      Latitude = activity.Place.Latitude,
-                      Longitude = activity.Place.Longitude,
-                      Name = activity.Place.Name
-                  }
-              })
-              .ToList();
+                .Where(x => x.User.UserName == username || x.IsActive || x.Place.IsActive)
+                .ToList();  // Load data into memory for further processing
 
-            return activities;
+            // Project the loaded data into ActivityViewModel
+            var activityViewModels = activities.Select(activity => new ActivityViewModel
+            {
+                ID = activity.ID,
+                Username = activity.User.UserName,
+                Time = activity.Time,
+                Duration = activity.Duration,
+                Name = activity.Name,
+                Date = activity.Date,
+                Place = new PlaceViewModel
+                {
+                    Id = activity.Place.Id,
+                    Latitude = activity.Place.Latitude,
+                    Longitude = activity.Place.Longitude,
+                    placeName = activity.Place.Name
+                },
+                IsActive = activity.IsActive
+            })
+           .AsEnumerable() // Switch to client-side evaluation
+
+           .ToList();
+
+            return activityViewModels;
         }
 
         public IEnumerable<PlaceModel> GetAllPlaces()
         {
-            return _context.Places.ToList();
+            return _context.Places.Where(x => x.IsActive == true).ToList();
         }
         public IEnumerable<PlaceModel> GetPlacesByUserName(string username)
         {
             return _context.Activities
-                .Where(ap => ap.User.UserName == username)
+                .Where(x => x.User.UserName == username || x.IsActive == true)
                 .Select(p => p.Place)
                 .ToList();
         }
 
         public PlaceModel GetPlaceByNamePlace(string name)
         {
-            return _context.Places.FirstOrDefault(x => x.Name == name);
+            return _context.Places.FirstOrDefault(x => x.Name == name || x.IsActive == true);
         }
 
+        public string toggel_Activity(int activity_id)
+        {
+            var activity = _context.Activities.FirstOrDefault(x => x.ID == activity_id);
+            if (activity == null) return "Activity is not found";
+            activity.IsActive = false;
+            _context.SaveChanges();
+            return "The activity is deleted";
+        }
+        public string toggel_Place(int place_id)
+        {
+            var place = _context.Places.FirstOrDefault(x => x.Id == place_id);
+            if (place == null) return "The Place is not found";
+            place.IsActive = false;
+            _context.SaveChanges();
+            return "The Place is deleted";
+        }
     }
 }

@@ -1,6 +1,7 @@
 ﻿
 using System.Collections.Generic;
 using Graduation.Models.Activity;
+using Graduation.Models.Auth;
 
 namespace Graduation.Services.Activity
 {
@@ -9,11 +10,12 @@ namespace Graduation.Services.Activity
         IEnumerable<PlaceModel> GetPlacesByUserName(string username);
         IEnumerable<PlaceModel> GetAllPlaces();
         List<ActivityViewModel> GetEvents();
-        ActivityModel CreateEvent(ActivityModel ev, string userid);
+        ActivityModel CreateEvent(ActivityViewModel ev, ApplicationUser user)   ;
         PlaceModel GetPlaceByNamePlace(string name);
         ActivityViewModel GetEventById(int id);
-
         List<ActivityViewModel> GetUserActivities(string username);
+        string toggel_Activity(int activity_id);
+        string toggel_Place(int place_id);
 
 
     }

@@ -13,6 +13,7 @@ using Graduation.Helpers;
 using Graduation.Models.Auth;
 using Graduation.Services.Activity;
 using Graduation.Services.Auth;
+using Microsoft.AspNetCore.Authentication;
 
 
 namespace Graduation
@@ -29,38 +30,21 @@ namespace Graduation
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
             services.Configure<JWT>(Configuration.GetSection("JWT"));
 
             services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
 
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IActivityService, ActivityService>();
-
+            
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))
             );
-
-            services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-                .AddJwtBearer(o =>
-                {
-                    o.RequireHttpsMetadata = false;
-                    o.SaveToken = false;
-                    o.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuerSigningKey = true,
-                        ValidateIssuer = true,
-                        ValidateAudience = true,
-                        ValidateLifetime = true,
-                        ValidIssuer = Configuration["JWT:Issuer"],
-                        ValidAudience = Configuration["JWT:Audience"],
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWT:Key"]))
-                    };
-                });
+            services.AddAuthentication("CustomHeader")
+       .AddScheme<AuthenticationSchemeOptions, CustomHeaderAuthenticationHandler>("CustomHeader",
+       options =>
+       {
+       });
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
@@ -74,9 +58,9 @@ namespace Graduation
         {
             //if (env.IsDevelopment())
             //{
-              app.UseDeveloperExceptionPage();
-              app.UseSwagger();
-              app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Graduation v1"));
+            app.UseDeveloperExceptionPage();
+            app.UseSwagger();
+            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Graduation v1"));
             //}
 
             app.UseHttpsRedirection();

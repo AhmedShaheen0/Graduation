@@ -9,10 +9,12 @@ using Graduation.Const;
 using Graduation.Models.Activity;
 using Graduation.Models.Auth;
 using Graduation.Services.Activity;
+using Microsoft.Extensions.Options;
 
 namespace Graduation.Controllers
 {
-    [Authorize(Roles = AppRoles.Admin  + AppRoles.User)]
+    //[Authorize(Roles = AppRoles.Admin  + AppRoles.User)]
+    //[Authorize(AuthenticationSchemes = "CustomHeader")]
     [ApiController]
     [Route("[controller]")]
     public class ActivityController : ControllerBase
@@ -28,59 +30,41 @@ namespace Graduation.Controllers
             _userManager = userManager;
             _logger = logger;
         }
-        [HttpGet("Event")]
+        [HttpGet]
         public async Task<IActionResult> GetEvents()
         {
             var actions = _actionService.GetEvents();
+
+            if (actions == null || !actions.Any())
+                return Ok("No activities found.");
+
             return Ok(actions);
         }
-        [HttpGet("Event/{Id}")]
+
+        [HttpGet("{Id}")]
         public async Task<IActionResult> GetEventAsync(int id)
         {
 
             var action = _actionService.GetEventById(id);
-            if (action is null) return NotFound();
+            if (action is null) return Ok("No activity found.");
 
             return Ok(action);
         }
 
-
         [HttpPost("Create")]
-        public async Task<IActionResult> PostEvent(ActivityViewModel activity)
+        public async Task<IActionResult> PostEvent([FromForm] ActivityViewModel activity)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
             var user = await _userManager.FindByNameAsync(activity.Username);
-            var place = new PlaceModel
-            {
-                Id = activity.Place.Id,
-                Latitude = activity.Place.Latitude,
-                Longitude = activity.Place.Longitude,
-                Name = activity.Place.Name
-            };
-
-            // Ensure user is found
             if (user == null)
             {
-                return NotFound("User not found");
+                return BadRequest(new { Message = "User not found" });
             }
-            var activityModel = new ActivityModel
-            {
-                Name = activity.Name,
-                Date = DateTime.UtcNow,
-                Userid = user.Id,
-                User = user,
-                Place = place
-            };
-
-            _actionService.CreateEvent(activityModel, user.UserName);
+            _actionService.CreateEvent(activity, user);
 
             return Ok();
         }
-        [HttpGet("Event/Username")]
+
+        [HttpGet("Username/{username}")]
 
         public IActionResult GetUserActivities(string username)
         {
@@ -89,13 +73,13 @@ namespace Graduation.Controllers
 
             if (userActivities == null || !userActivities.Any())
             {
-                return NotFound("No activities found for this user.");
+                return Ok("No activities found for this user.");
             }
 
             return Ok(userActivities);
         }
 
-        [HttpGet("Places_By_Username")]
+        [HttpGet("Places/Username/{username}")]
         public async Task<IActionResult> GetPlacesByUserName(string username)
         {
             var places = _actionService.GetPlacesByUserName(username);
@@ -108,6 +92,19 @@ namespace Graduation.Controllers
             var places = _actionService.GetAllPlaces();
             return Ok(places);
         }
+        [HttpDelete("Place")]
+        public ActionResult toggel_Place(int place_id)
+        {
+            var place = _actionService.toggel_Place(place_id);
+            return Ok(place);
+        }
+        [HttpDelete("Activity")]
+        public ActionResult toggel_activityy(int activity_id)
+        {
+            var activity = _actionService.toggel_Activity(activity_id);
+            return Ok(activity);
+        }
+      
     }
 }
 

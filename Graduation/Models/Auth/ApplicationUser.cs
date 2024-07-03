@@ -14,7 +14,7 @@ namespace Graduation.Models.Auth
         [MaxLength(50)]
         public string LastName { get; set; }
         [DataType(DataType.Date)]
-        [DisplayFormat(DataFormatString = "{0:dd-MM-yyyy}")]
+        [DisplayFormat(DataFormatString = "{0:dd-MM-yyyy}") ]
         public DateTime Birthdate { get; set; }
         public List<ActivityModel> Activities { get; set; }
     }
