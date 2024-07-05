@@ -61,9 +61,9 @@ namespace Graduation.Controllers
             }
             _actionService.CreateEvent(activity, user);
 
-            return Ok();
+            return Ok("the activit");
         }
-
+            
         [HttpGet("Username/{username}")]
 
         public IActionResult GetUserActivities(string username)
@@ -92,19 +92,23 @@ namespace Graduation.Controllers
             var places = _actionService.GetAllPlaces();
             return Ok(places);
         }
-        [HttpDelete("Place")]
-        public ActionResult toggel_Place(int place_id)
+        
+        [HttpDelete("{id}")]
+        public ActionResult toggel_activity(int id)
         {
-            var place = _actionService.toggel_Place(place_id);
-            return Ok(place);
-        }
-        [HttpDelete("Activity")]
-        public ActionResult toggel_activityy(int activity_id)
-        {
-            var activity = _actionService.toggel_Activity(activity_id);
+            var activity = _actionService.toggel_Activity(id);
+           
             return Ok(activity);
         }
-      
+        [HttpDelete("place/{id}")]
+        public ActionResult toggel_Place(int id)
+        {
+            var place = _actionService.toggel_Place(id);
+            
+            return Ok(place);
+        }
+
+
     }
 }
 

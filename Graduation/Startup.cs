@@ -35,6 +35,7 @@ namespace Graduation
             services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
 
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IFeedbackService, FeedbackService>();
             services.AddScoped<IActivityService, ActivityService>();
             
             services.AddDbContext<ApplicationDbContext>(options =>

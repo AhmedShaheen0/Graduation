@@ -56,7 +56,7 @@ namespace Graduation.Services.Activity
             var activity = _context.Activities
                .Include(x => x.Place)
                .Include(x => x.User)
-               .Where(x => x.IsActive == true || x.Place.IsActive == true)
+               .Where(x => x.IsActive == true && x.Place.IsActive == true)
              .FirstOrDefault(e => e.ID == id);
 
             if (activity is null)
@@ -121,7 +121,9 @@ namespace Graduation.Services.Activity
         {
             // Fetch the activities that match the filtering criteria
             var activities = _context.Activities
-                .Where(x => x.User.UserName == username || x.IsActive || x.Place.IsActive)
+                .Include(x=>x.User)
+                .Include(y=>y.Place)
+                .Where(x => x.User.UserName == username && x.IsActive && x.Place.IsActive)
                 .ToList();  // Load data into memory for further processing
 
             // Project the loaded data into ActivityViewModel
@@ -155,15 +157,16 @@ namespace Graduation.Services.Activity
         }
         public IEnumerable<PlaceModel> GetPlacesByUserName(string username)
         {
-            return _context.Activities
-                .Where(x => x.User.UserName == username || x.IsActive == true)
-                .Select(p => p.Place)
-                .ToList();
+            var places = from activity in _context.Activities
+                         where activity.User.UserName == username && activity.IsActive
+                         select activity.Place;
+
+            return places.ToList();
         }
 
         public PlaceModel GetPlaceByNamePlace(string name)
         {
-            return _context.Places.FirstOrDefault(x => x.Name == name || x.IsActive == true);
+            return _context.Places.FirstOrDefault(x => x.Name == name && x.IsActive == true);
         }
 
         public string toggel_Activity(int activity_id)
